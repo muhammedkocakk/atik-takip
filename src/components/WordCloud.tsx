@@ -38,6 +38,13 @@ interface Boyut {
   yukseklik: number;
 }
 
+interface FontAraligi {
+  min: number;
+  max: number;
+  /** Kelimenin kaplayabileceği max genişlik oranı */
+  maxSatirOrani: number;
+}
+
 function frekansHesapla(kelimeler: string[]): { metin: string; sayi: number; orijinal: string }[] {
   const map = new Map<string, { sayi: number; orijinal: string }>();
   for (const k of kelimeler) {
@@ -69,15 +76,25 @@ function rastgeleUret(seed: number) {
   };
 }
 
-/** Ekran genişliğine göre ölçek */
-function olcekFaktoru(genislik: number): number {
-  return Math.min(1, Math.max(0.45, genislik / REF_GENISLIK));
+/** Ekran genişliğine göre min/max font (px) */
+function fontAraligi(genislik: number): FontAraligi {
+  if (genislik < 400) {
+    return { min: 12, max: 24, maxSatirOrani: 0.4 };
+  }
+  if (genislik < 640) {
+    return { min: 15, max: 32, maxSatirOrani: 0.44 };
+  }
+  if (genislik < 900) {
+    return { min: 20, max: 48, maxSatirOrani: 0.5 };
+  }
+  return { min: 22, max: 58, maxSatirOrani: 0.52 };
 }
 
 function maxKelimeSayisi(genislik: number): number {
   if (genislik < 400) return 35;
-  if (genislik < 640) return 55;
-  return 90;
+  if (genislik < 640) return 50;
+  if (genislik < 900) return 65;
+  return 75;
 }
 
 function metinKutusu(
@@ -85,24 +102,22 @@ function metinKutusu(
   fontSize: number,
   rotate: number,
   cx: number,
-  cy: number,
-  olcek: number
+  cy: number
 ): Kutu {
-  const karakter = fontSize * 0.62 * olcek;
+  const karakter = fontSize * 0.65;
   const w = metin.length * karakter;
-  const h = fontSize * 1.2 * olcek;
+  const h = fontSize * 1.25;
   const rad = (rotate * Math.PI) / 180;
   const cos = Math.abs(Math.cos(rad));
   const sin = Math.abs(Math.sin(rad));
-  const genislik = w * cos + h * sin;
-  const yukseklik = w * sin + h * cos;
-  const uzun = metin.length > 10;
-  const pad = uzun ? 14 : 10;
+  const genislikKutu = w * cos + h * sin;
+  const yukseklikKutu = w * sin + h * cos;
+  const pad = metin.length > 10 ? 12 : 8;
   return {
-    left: cx - genislik / 2 - pad,
-    top: cy - yukseklik / 2 - pad,
-    right: cx + genislik / 2 + pad,
-    bottom: cy + yukseklik / 2 + pad,
+    left: cx - genislikKutu / 2 - pad,
+    top: cy - yukseklikKutu / 2 - pad,
+    right: cx + genislikKutu / 2 + pad,
+    bottom: cy + yukseklikKutu / 2 + pad,
   };
 }
 
@@ -124,19 +139,18 @@ function aciSec(rnd: () => number, uzunMetin: boolean, mobil: boolean): number {
 function fontBoyutuHesapla(
   oran: number,
   uzunluk: number,
-  olcek: number,
   genislik: number
 ): number {
-  let boyut = (14 + Math.pow(oran, 0.75) * 34) * olcek;
-  if (genislik < 400) boyut = Math.min(boyut, 22);
-  else if (genislik < 640) boyut = Math.min(boyut, 30);
+  const { min, max, maxSatirOrani } = fontAraligi(genislik);
+  let boyut = min + Math.pow(oran, 0.8) * (max - min);
 
-  const maxGenislikPx = genislik * 0.42;
-  const tahminiGenislik = uzunluk * boyut * 0.62;
+  const maxGenislikPx = genislik * maxSatirOrani;
+  const tahminiGenislik = uzunluk * boyut * 0.65;
   if (tahminiGenislik > maxGenislikPx) {
-    boyut = maxGenislikPx / (uzunluk * 0.62);
+    boyut = maxGenislikPx / (uzunluk * 0.65);
   }
-  return Math.max(11, Math.round(boyut));
+
+  return Math.max(min * 0.85, Math.round(boyut));
 }
 
 function kelimeleriYerlestir(
@@ -144,15 +158,14 @@ function kelimeleriYerlestir(
   boyut: Boyut
 ): Yerlesim[] {
   const { genislik: W, yukseklik: H } = boyut;
-  const olcek = olcekFaktoru(W);
   const mobil = W < 640;
   const max = frekanslar[0]?.sayi ?? 1;
   const min = frekanslar[frekanslar.length - 1]?.sayi ?? 1;
   const liste = frekanslar.slice(0, maxKelimeSayisi(W));
   const yerlesen: Yerlesim[] = [];
   const kutular: Kutu[] = [];
-  const kenar = mobil ? 28 : 40;
-  const MAX_DENEME = mobil ? 120 : 80;
+  const kenar = mobil ? 24 : 36;
+  const MAX_DENEME = mobil ? 120 : 90;
 
   for (const f of liste) {
     const oran = max === min ? 0.7 : (f.sayi - min) / (max - min);
@@ -161,16 +174,16 @@ function kelimeleriYerlestir(
     const rnd = rastgeleUret(seed);
     const renk = RENKLER[Math.floor(rnd() * RENKLER.length)];
 
-    let fontSize = fontBoyutuHesapla(oran, uzunluk, olcek, W);
+    let fontSize = fontBoyutuHesapla(oran, uzunluk, W);
     let yerlesti = false;
 
     for (let kucult = 0; kucult < 4 && !yerlesti; kucult++) {
-      const fs = Math.max(10, fontSize - kucult * 3);
+      const fs = Math.max(fontAraligi(W).min * 0.8, fontSize - kucult * 3);
       for (let d = 0; d < MAX_DENEME; d++) {
         const rotate = aciSec(rnd, uzunluk > 12, mobil);
         const x = kenar + rnd() * (W - kenar * 2);
         const y = kenar + rnd() * (H - kenar * 2);
-        const kutu = metinKutusu(f.orijinal, fs, rotate, x, y, olcek);
+        const kutu = metinKutusu(f.orijinal, fs, rotate, x, y);
 
         if (
           kutu.left < 8 ||
@@ -197,7 +210,6 @@ function kelimeleriYerlestir(
         break;
       }
     }
-    /* Yer yoksa kelimeyi atla — üst üste bindirme */
   }
 
   return yerlesen;
@@ -244,13 +256,15 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
     );
   }
 
+  const buyukEkran = boyut.genislik >= 640;
+
   return (
     <div
       ref={kapsayiciRef}
       className="relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/80"
       style={{
         aspectRatio: `${REF_GENISLIK} / ${REF_YUKSEKLIK}`,
-        minHeight: boyut.genislik < 400 ? 220 : undefined,
+        minHeight: boyut.genislik < 400 ? 220 : buyukEkran ? 320 : 260,
       }}
     >
       <div className="absolute inset-0">
@@ -264,7 +278,7 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
               fontSize: `${o.fontSize}px`,
               color: o.renk,
               transform: `translate(-50%, -50%) rotate(${o.rotate}deg)`,
-              fontWeight: o.fontSize > 28 ? 800 : o.fontSize > 18 ? 700 : 600,
+              fontWeight: o.fontSize > 36 ? 800 : o.fontSize > 22 ? 700 : 600,
             }}
             title={`${o.sayi} kez yazıldı`}
           >

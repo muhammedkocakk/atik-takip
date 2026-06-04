@@ -21,7 +21,9 @@ export default async function DusuncelerPage() {
       <section>
         <h2 className="mb-3 text-lg font-semibold text-slate-900">Kelime bulutu</h2>
         <p className="mb-4 text-sm text-slate-500">{cevaplar.length} kayıtlı cevap</p>
-        <WordCloud kelimeler={kelimeler} />
+        <div className="w-full">
+          <WordCloud kelimeler={kelimeler} />
+        </div>
       </section>
     </div>
   );
