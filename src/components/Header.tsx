@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RecycleIcon } from "@/components/RecycleIcon";
+import { PROJE_ADI, PROJE_ALT_BASLIK } from "@/lib/branding";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { isAdminAuthenticated } from "@/lib/admin-session";
 
@@ -21,9 +22,9 @@ export async function Header() {
             <RecycleIcon />
           </span>
           <span className="min-w-0 leading-tight">
-            <span className="block truncate font-bold text-slate-900">Atık Takip</span>
+            <span className="block truncate font-bold text-slate-900">{PROJE_ADI}</span>
             <span className="block text-[10px] font-medium uppercase tracking-wider text-emerald-700">
-              İstün Pilot
+              {PROJE_ALT_BASLIK}
             </span>
           </span>
         </Link>

@@ -1,7 +1,7 @@
 {
-  "name": "Atık Takip — Pilot",
-  "short_name": "Atık Takip",
-  "description": "İstün Sütlüce ve ADSM kampüslerinde atık kutusu takibi",
+  "name": "Sıfır Atık — İstün",
+  "short_name": "Sıfır Atık",
+  "description": "İstün Sütlüce ve ADSM kampüslerinde sıfır atık kutusu takibi",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

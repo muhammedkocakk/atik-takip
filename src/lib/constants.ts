@@ -70,7 +70,7 @@ export function asamaIndeksi(kod: AsamaKod): number {
   return ASAMALAR.findIndex((a) => a.kod === kod);
 }
 
-/** Pilot için önerilen ek türler (zaten yukarıda tanımlı) */
+/** Desteklenen atık türleri listesi */
 export const ONERILEN_TURLER: AtikTurKod[] = [
   "ilac",
   "elektronik",

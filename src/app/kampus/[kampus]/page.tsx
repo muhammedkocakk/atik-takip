@@ -23,7 +23,7 @@ export default async function KampusPage({ params }: PageProps) {
           ← Ana sayfa
         </Link>
         <h1 className="mt-2 text-2xl font-bold text-slate-900">{kampus.ad}</h1>
-        <p className="mt-1 text-slate-500">{kutular.length} atık kutusu</p>
+        <p className="mt-1 text-slate-500">{kutular.length} kutu</p>
       </div>
 
       <div className="space-y-3">

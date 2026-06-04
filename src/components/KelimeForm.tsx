@@ -41,10 +41,10 @@ export function KelimeForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label htmlFor="kelime" className="block text-sm font-medium text-slate-700">
-        Atık deyince aklınıza ne geliyor?
+        Sıfır atık deyince aklınıza ne geliyor?
       </label>
       <p className="text-xs text-slate-500">
-        Tek kelime veya kısa cümle (en fazla {KELIME_MAX_UZUNLUK} karakter) — kayıtlar kalıcıdır
+        Tek kelime veya kısa cümle (en fazla {KELIME_MAX_UZUNLUK} karakter)
       </p>
       <div className="flex gap-2">
         <input

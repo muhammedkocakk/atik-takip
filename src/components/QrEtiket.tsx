@@ -29,7 +29,7 @@ export async function QrEtiket({ kutu }: { kutu: Kutu }) {
         />
         <div className="mt-4 flex-1 sm:mt-0">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-            İstün · Atık Takip
+            İstün · Sıfır Atık
           </p>
           <h3 className="mt-1 flex items-center justify-center gap-2 text-xl font-bold text-slate-900 sm:justify-start">
             <span>{tur.emoji}</span>
@@ -38,7 +38,7 @@ export async function QrEtiket({ kutu }: { kutu: Kutu }) {
           <p className="mt-1 font-medium text-brand-700">{kampus.ad}</p>
           <p className="mt-2 text-sm text-slate-600">{kutu.konum_aciklama}</p>
           <p className="mt-4 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">
-            QR okutun — atığınız nerede?
+            QR okutun — sıfır atığınız nerede?
           </p>
           <p className="mt-3 text-xs text-slate-400">
             Telefonunuzla kodu okutun; toplama aracı ve tesis durumunu görün.
