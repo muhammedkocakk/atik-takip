@@ -88,7 +88,11 @@ function Ikon({ tip, aktif, tamamlandi }: { tip: string; aktif: boolean; tamamla
             : "bg-slate-100 text-slate-400"
       }`}
     >
-      {emojiler[tip] ?? "•"}
+      {tip === "arac" ? (
+        <span className="inline-block scale-x-[-1]">{emojiler.arac}</span>
+      ) : (
+        (emojiler[tip] ?? "•")
+      )}
     </div>
   );
 }
