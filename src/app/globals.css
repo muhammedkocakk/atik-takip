@@ -48,21 +48,50 @@ body {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
   body {
     background: white;
   }
+
   header,
   footer,
   .print\\:hidden {
     display: none !important;
   }
+
   main {
     max-width: 100%;
     padding: 0;
   }
+
+  /* Her QR etiketi tek sayfa */
+  .qr-etiket-sayfa {
+    break-after: page;
+    page-break-after: always;
+    min-height: calc(100vh - 30mm);
+    min-height: calc(100dvh - 30mm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 10mm 0;
+  }
+
+  .qr-etiket-sayfa:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
   .qr-etiket {
+    break-inside: avoid;
     page-break-inside: avoid;
-    margin-bottom: 1rem;
+    margin: 0;
     box-shadow: none;
+    width: 100%;
+    max-width: 180mm;
   }
 }

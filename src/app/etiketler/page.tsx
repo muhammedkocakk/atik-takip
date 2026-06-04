@@ -30,7 +30,7 @@ export default async function EtiketlerPage() {
         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <p className="font-semibold">Nasıl kullanılır?</p>
           <ol className="mt-2 list-inside list-decimal space-y-1 text-emerald-800">
-            <li>Aşağıdan ilgili kampüs etiketlerini yazdırın</li>
+            <li>Aşağıdan yazdırın — her QR etiketi ayrı sayfada çıkar</li>
             <li>QR’lı yüzü kutunun üstüne yapıştırın (laminasyon önerilir)</li>
             <li>Yönetim panelinden aşamayı güncelleyin — araç “yolda” görünsün</li>
           </ol>
@@ -46,15 +46,17 @@ export default async function EtiketlerPage() {
 
       {gruplar.map(({ kampus, kutular: liste }) => (
         <section key={kampus.kod} className="space-y-4">
-          <h2 className="border-b border-slate-200 pb-2 text-xl font-bold text-slate-900 print:mt-8">
+          <h2 className="border-b border-slate-200 pb-2 text-xl font-bold text-slate-900 print:hidden">
             {kampus.ad}
           </h2>
           {liste.length === 0 ? (
-            <p className="text-slate-500">Bu kampüste henüz kutu tanımlı değil.</p>
+            <p className="text-slate-500 print:hidden">Bu kampüste henüz kutu tanımlı değil.</p>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-6 print:block print:gap-0">
               {liste.map((kutu) => (
-                <QrEtiket key={`${kutu.kampus_kod}-${kutu.id}`} kutu={kutu} />
+                <div key={`${kutu.kampus_kod}-${kutu.id}`} className="qr-etiket-sayfa">
+                  <QrEtiket kutu={kutu} />
+                </div>
               ))}
             </div>
           )}
