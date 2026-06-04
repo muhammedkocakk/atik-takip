@@ -17,6 +17,7 @@ const RENKLER = [
 
 const REF_GENISLIK = 1000;
 const REF_YUKSEKLIK = 560;
+const SINIR_PAYI = 10;
 
 interface WordCloudProps {
   kelimeler: string[];
@@ -111,7 +112,71 @@ function fontBoyutu(
   return Math.max(min, Math.round(boyut));
 }
 
-/** Az kelime varken d3-cloud merkezde kalır; konumları alana yay */
+let olcumCanvas: HTMLCanvasElement | null = null;
+let olcumCtx: CanvasRenderingContext2D | null = null;
+
+function metinGenisligiPx(metin: string, fontSize: number): number {
+  if (typeof document !== "undefined") {
+    if (!olcumCanvas) {
+      olcumCanvas = document.createElement("canvas");
+      olcumCtx = olcumCanvas.getContext("2d");
+    }
+    if (olcumCtx) {
+      olcumCtx.font = `700 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
+      return olcumCtx.measureText(metin).width;
+    }
+  }
+  return metin.length * fontSize * 0.58;
+}
+
+function kelimeSinirKutusu(
+  w: Yerlesim,
+  W: number,
+  H: number
+): { left: number; top: number; right: number; bottom: number } {
+  const cx = W / 2 + w.xPx;
+  const cy = H / 2 + w.yPx;
+  const genislik = metinGenisligiPx(w.orijinal, w.fontSize);
+  const yukseklik = w.fontSize * 1.2;
+  const rad = (w.rotate * Math.PI) / 180;
+  const cos = Math.abs(Math.cos(rad));
+  const sin = Math.abs(Math.sin(rad));
+  const kutuW = genislik * cos + yukseklik * sin;
+  const kutuH = genislik * sin + yukseklik * cos;
+  const pad = SINIR_PAYI;
+  return {
+    left: cx - kutuW / 2 - pad,
+    top: cy - kutuH / 2 - pad,
+    right: cx + kutuW / 2 + pad,
+    bottom: cy + kutuH / 2 + pad,
+  };
+}
+
+function hepsiSinirIcinde(yerlesen: Yerlesim[], W: number, H: number): boolean {
+  for (const w of yerlesen) {
+    const k = kelimeSinirKutusu(w, W, H);
+    if (
+      k.left < SINIR_PAYI ||
+      k.top < SINIR_PAYI ||
+      k.right > W - SINIR_PAYI ||
+      k.bottom > H - SINIR_PAYI
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function konumlariOlcekle(yerlesen: Yerlesim[], skala: number): Yerlesim[] {
+  if (skala === 1) return yerlesen;
+  return yerlesen.map((w) => ({
+    ...w,
+    xPx: w.xPx * skala,
+    yPx: w.yPx * skala,
+  }));
+}
+
+/** Az kelime varken d3-cloud merkezde kalır; konumları alana yay (sınır içinde) */
 function seyrekKonumlariYay(yerlesen: Yerlesim[], W: number, H: number): Yerlesim[] {
   const n = yerlesen.length;
   if (n <= 1) return yerlesen;
@@ -127,18 +192,39 @@ function seyrekKonumlariYay(yerlesen: Yerlesim[], W: number, H: number): Yerlesi
   }
   if (maxAbsX < 2 && maxAbsY < 2) return yerlesen;
 
-  const skala = Math.min(
+  const hedefSkala = Math.min(
     hedefX / Math.max(maxAbsX, 1),
     hedefY / Math.max(maxAbsY, 1),
-    n < 6 ? 3.5 : 2.6
+    n < 6 ? 2 : 1.6
   );
-  if (skala <= 1.05) return yerlesen;
+  if (hedefSkala <= 1.05) return yerlesen;
 
-  return yerlesen.map((w) => ({
-    ...w,
-    xPx: w.xPx * skala,
-    yPx: w.yPx * skala,
-  }));
+  let enIyi = yerlesen;
+  let alt = 1;
+  let ust = hedefSkala;
+
+  for (let i = 0; i < 14; i++) {
+    const orta = (alt + ust) / 2;
+    const deneme = konumlariOlcekle(yerlesen, orta);
+    if (hepsiSinirIcinde(deneme, W, H)) {
+      enIyi = deneme;
+      alt = orta;
+    } else {
+      ust = orta;
+    }
+  }
+
+  return enIyi;
+}
+
+/** Yayma dışında kalan taşmalar için hafif küçültme */
+function sinirlaraSigdir(yerlesen: Yerlesim[], W: number, H: number): Yerlesim[] {
+  if (hepsiSinirIcinde(yerlesen, W, H)) return yerlesen;
+  for (let skala = 0.95; skala >= 0.7; skala -= 0.05) {
+    const deneme = konumlariOlcekle(yerlesen, skala);
+    if (hepsiSinirIcinde(deneme, W, H)) return deneme;
+  }
+  return konumlariOlcekle(yerlesen, 0.7);
 }
 
 function bulutHazirla(
@@ -200,7 +286,7 @@ function bulutHazirla(
             yPx: w.y,
           });
         }
-        resolve(seyrekKonumlariYay(yerlesen, W, H));
+        resolve(sinirlaraSigdir(seyrekKonumlariYay(yerlesen, W, H), W, H));
       });
 
     layout.start();
@@ -292,7 +378,7 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
                 fontSize: `${o.fontSize}px`,
                 color: o.renk,
                 transform: `translate(calc(-50% + ${o.xPx}px), calc(-50% + ${o.yPx}px)) rotate(${o.rotate}deg)`,
-                fontWeight: o.fontSize > 36 ? 800 : o.fontSize > 22 ? 700 : 600,
+                fontWeight: 700,
               }}
               title={`${o.sayi} kez yazıldı`}
             >
