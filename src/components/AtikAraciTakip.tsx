@@ -41,7 +41,7 @@ function DurumBanner({ asama }: { asama: AsamaKod }) {
       <div className="flex items-center gap-4">
         {asama === "yolda" && (
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl animate-bounce-slow">
-            🚛
+            <span className="inline-block scale-x-[-1]">🚛</span>
           </div>
         )}
         {asama === "toplandi" && (
@@ -100,7 +100,10 @@ export function AtikAraciTakip({
   kampusAd,
 }: AtikAraciTakipProps) {
   const aktifIndeks = asamaIndeksi(mevcutAsama);
-  const aracKonum = aktifIndeks === 0 ? 8 : aktifIndeks === 1 ? 38 : aktifIndeks === 2 ? 68 : 92;
+  /** Kampüs sağda, tesis solda — araç sağdan sola ilerler */
+  const ROTA_KONUM = [92, 62, 32, 8] as const;
+  const aracKonum = ROTA_KONUM[aktifIndeks] ?? 8;
+  const rotaDoluluk = 100 - aracKonum;
 
   return (
     <div className="space-y-6">
@@ -113,14 +116,14 @@ export function AtikAraciTakip({
         </p>
         <p className="mb-5 text-sm text-slate-600">
           <span className="font-medium text-slate-800">{kampusAd}</span>
-          {" → "}
-          toplama aracı → işleme tesisi → tamamlandı
+          {" ← "}
+          toplama aracı ← işleme tesisi ← tamamlandı
         </p>
 
         <div className="relative mx-2 mb-10 mt-4 h-2 rounded-full bg-slate-100">
           <div
-            className="absolute h-2 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-700"
-            style={{ width: `${aracKonum}%` }}
+            className="absolute right-0 h-2 rounded-full bg-gradient-to-l from-brand-500 to-brand-600 transition-all duration-700"
+            style={{ width: `${rotaDoluluk}%` }}
           />
           {mevcutAsama === "yolda" && (
             <div
@@ -134,14 +137,18 @@ export function AtikAraciTakip({
             }`}
             style={{ left: `${aracKonum}%`, transform: "translateX(-50%)" }}
           >
-            <span className="text-2xl drop-shadow-md" title="Atık toplama aracı">
+            <span
+              className="inline-block scale-x-[-1] text-2xl drop-shadow-md"
+              title="Atık toplama aracı"
+            >
               🚛
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
-          {ASAMALAR.map((asama, index) => {
+          {[...ASAMALAR].reverse().map((asama) => {
+            const index = asamaIndeksi(asama.kod);
             const tamamlandi = index <= aktifIndeks;
             const aktif = index === aktifIndeks;
             return (
