@@ -1,0 +1,19 @@
+{
+  "name": "Atık Takip — Pilot",
+  "short_name": "Atık Takip",
+  "description": "İstün Sütlüce ve ADSM kampüslerinde atık kutusu takibi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "lang": "tr",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

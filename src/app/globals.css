@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--foreground);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 40%, #e2e8f0 100%);
+  min-height: 100dvh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes truck-drive {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+@keyframes pulse-road {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+.animate-truck-drive {
+  animation: truck-drive 1.2s ease-in-out infinite;
+}
+
+.animate-pulse-road {
+  animation: pulse-road 1s ease-in-out infinite;
+}
+
+@media print {
+  body {
+    background: white;
+  }
+  header,
+  footer,
+  .print\\:hidden {
+    display: none !important;
+  }
+  main {
+    max-width: 100%;
+    padding: 0;
+  }
+  .qr-etiket {
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none;
+  }
+}
