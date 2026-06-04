@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { KELIME_SORUSU } from "@/lib/branding";
 import { KELIME_MAX_UZUNLUK } from "@/lib/kelime-constants";
 
 export function KelimeForm() {
@@ -41,7 +42,7 @@ export function KelimeForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label htmlFor="kelime" className="block text-sm font-medium text-slate-700">
-        Sıfır atık deyince aklınıza ne geliyor?
+        {KELIME_SORUSU}
       </label>
       <p className="text-xs text-slate-500">
         Tek kelime veya kısa cümle (en fazla {KELIME_MAX_UZUNLUK} karakter)

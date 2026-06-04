@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { KAMPUSLER, ONERILEN_TURLER, ATIK_TURLERI } from "@/lib/constants";
-import { PROJE_ADI, PROJE_ALT_BASLIK } from "@/lib/branding";
+import { KELIME_SORUSU, PROJE_ADI, PROJE_ALT_BASLIK } from "@/lib/branding";
 
 export default function HomePage() {
   return (
@@ -65,7 +65,7 @@ export default function HomePage() {
           💭
         </span>
         <div>
-          <p className="font-bold text-slate-900">Sıfır atık deyince ne geliyor?</p>
+          <p className="font-bold text-slate-900">{KELIME_SORUSU}</p>
           <p className="text-sm text-slate-500">Kelime bulutuna katılın</p>
         </div>
       </Link>

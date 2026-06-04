@@ -1,5 +1,6 @@
 import { KelimeForm } from "@/components/KelimeForm";
 import { WordCloud } from "@/components/WordCloud";
+import { KELIME_SORUSU } from "@/lib/branding";
 import { getKelimeCevaplari } from "@/lib/kelime-actions";
 
 export default async function DusuncelerPage() {
@@ -9,7 +10,7 @@ export default async function DusuncelerPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Sıfır atık deyince ne geliyor?</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{KELIME_SORUSU}</h1>
         <p className="mt-2 text-slate-500">
           Tek kelime veya kısa bir cümle yazın; cevaplar aşağıdaki bulutta toplanır.
         </p>
