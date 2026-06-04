@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Header } from "@/components/Header";
+import { PROJE_ADI, UNIVERSITE_ADI, UNIVERSITE_ETIKET } from "@/lib/branding";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sıfır Atık — İstün Üniversitesi",
+  title: `${PROJE_ADI} — ${UNIVERSITE_ADI}`,
   description:
-    "İstün Sütlüce ve ADSM kampüslerinde sıfır atık kutusu takibi. QR okutun, toplama rotasını izleyin.",
+    "İstanbul Sağlık ve Teknoloji Üniversitesi Sütlüce ve ADSM kampüslerinde sıfır atık kutusu takibi.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -31,7 +32,7 @@ export default function RootLayout({
         <Header />
         <main className="mx-auto max-w-3xl px-4 py-6 pb-16">{children}</main>
         <footer className="border-t border-slate-200/80 bg-white/80 py-6 text-center text-xs text-slate-500 backdrop-blur print:hidden">
-          <p>İstün · Sıfır Atık · Sütlüce & ADSM</p>
+          <p>{UNIVERSITE_ETIKET} · Sütlüce & ADSM</p>
         </footer>
       </body>
     </html>

@@ -1,7 +1,7 @@
 export const KAMPUSLER = {
   sutluce: {
     kod: "sutluce",
-    ad: "İstün Sütlüce Kampüsü",
+    ad: "Sütlüce Kampüsü",
     kisaAd: "Sütlüce",
   },
   adsm: {

@@ -1,4 +1,4 @@
--- İstün Atık Takip — Supabase SQL
+-- Sıfır Atık — Supabase SQL
 
 create table if not exists kampusler (
   kod text primary key,
@@ -6,7 +6,7 @@ create table if not exists kampusler (
 );
 
 insert into kampusler (kod, ad) values
-  ('sutluce', 'İstün Sütlüce Kampüsü'),
+  ('sutluce', 'Sütlüce Kampüsü'),
   ('adsm', 'ADSM Kampüsü')
 on conflict (kod) do nothing;
 

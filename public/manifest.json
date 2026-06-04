@@ -1,7 +1,7 @@
 {
-  "name": "Sıfır Atık — İstün",
+  "name": "Sıfır Atık — İSTÜ",
   "short_name": "Sıfır Atık",
-  "description": "İstün Sütlüce ve ADSM kampüslerinde sıfır atık kutusu takibi",
+  "description": "İstanbul Sağlık ve Teknoloji Üniversitesi — Sütlüce ve ADSM sıfır atık takibi",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",

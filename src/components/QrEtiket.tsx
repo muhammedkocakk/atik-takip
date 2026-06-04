@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { UNIVERSITE_ETIKET } from "@/lib/branding";
 import { ATIK_TURLERI, KAMPUSLER } from "@/lib/constants";
 import { getKutuTakipUrl } from "@/lib/site-url";
 import type { Kutu } from "@/lib/types";
@@ -29,7 +30,7 @@ export async function QrEtiket({ kutu }: { kutu: Kutu }) {
         />
         <div className="mt-4 flex-1 sm:mt-0">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-            İstün · Sıfır Atık
+            {UNIVERSITE_ETIKET}
           </p>
           <h3 className="mt-1 flex items-center justify-center gap-2 text-xl font-bold text-slate-900 sm:justify-start">
             <span>{tur.emoji}</span>

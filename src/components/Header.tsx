@@ -23,7 +23,7 @@ export async function Header() {
           </span>
           <span className="min-w-0 leading-tight">
             <span className="block truncate font-bold text-slate-900">{PROJE_ADI}</span>
-            <span className="block text-[10px] font-medium uppercase tracking-wider text-emerald-700">
+            <span className="block text-[10px] font-medium leading-snug text-emerald-700 sm:text-[11px]">
               {PROJE_ALT_BASLIK}
             </span>
           </span>
