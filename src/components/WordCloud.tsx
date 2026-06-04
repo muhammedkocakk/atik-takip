@@ -97,6 +97,23 @@ function maxKelimeSayisi(genislik: number): number {
   return 75;
 }
 
+let olcumCanvas: HTMLCanvasElement | null = null;
+let olcumCtx: CanvasRenderingContext2D | null = null;
+
+function metinGenisligiPx(metin: string, fontSize: number): number {
+  if (typeof document !== "undefined") {
+    if (!olcumCanvas) {
+      olcumCanvas = document.createElement("canvas");
+      olcumCtx = olcumCanvas.getContext("2d");
+    }
+    if (olcumCtx) {
+      olcumCtx.font = `700 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
+      return olcumCtx.measureText(metin).width;
+    }
+  }
+  return metin.length * fontSize * 0.62;
+}
+
 function metinKutusu(
   metin: string,
   fontSize: number,
@@ -104,8 +121,7 @@ function metinKutusu(
   cx: number,
   cy: number
 ): Kutu {
-  const karakter = fontSize * 0.65;
-  const w = metin.length * karakter;
+  const w = metinGenisligiPx(metin, fontSize);
   const h = fontSize * 1.25;
   const rad = (rotate * Math.PI) / 180;
   const cos = Math.abs(Math.cos(rad));
@@ -134,23 +150,50 @@ function sinirIcinde(kutu: Kutu, W: number, H: number, kenar: number): boolean {
   );
 }
 
-/** Merkezden dışa spiral — kelimeler tüm alana dengeli yayılır */
+/** Merkezden dışa spiral — yarıçap ekrana göre ölçeklenir */
 function* spiralNoktalari(
   merkezX: number,
   merkezY: number,
   baslangicAcisi: number,
-  adimSayisi: number
+  adimSayisi: number,
+  maxYaricap: number
 ): Generator<{ x: number; y: number }> {
   yield { x: merkezX, y: merkezY };
   for (let i = 1; i < adimSayisi; i++) {
-    const t = i * 0.22;
-    const r = 4 + t * 5.5;
-    const aci = baslangicAcisi + t * 2.35;
+    const t = i / adimSayisi;
+    const r = t * maxYaricap;
+    const aci = baslangicAcisi + i * 0.42;
     yield {
       x: merkezX + r * Math.cos(aci),
       y: merkezY + r * Math.sin(aci),
     };
   }
+}
+
+/** Mobil ve dar ekranlarda tüm alanı tarayan ızgara denemeleri */
+function* izgaraNoktalari(
+  aralik: { minX: number; maxX: number; minY: number; maxY: number },
+  sutun: number,
+  satir: number,
+  rnd: () => number
+): Generator<{ x: number; y: number }> {
+  const hucreler: { x: number; y: number }[] = [];
+  for (let row = 0; row < satir; row++) {
+    for (let col = 0; col < sutun; col++) {
+      const x =
+        aralik.minX +
+        ((col + 0.5) / sutun) * (aralik.maxX - aralik.minX);
+      const y =
+        aralik.minY +
+        ((row + 0.5) / satir) * (aralik.maxY - aralik.minY);
+      hucreler.push({ x, y });
+    }
+  }
+  for (let i = hucreler.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [hucreler[i], hucreler[j]] = [hucreler[j], hucreler[i]];
+  }
+  yield* hucreler;
 }
 
 function gecerliMerkezAraligi(
@@ -174,7 +217,7 @@ function gecerliMerkezAraligi(
 
 function aciSec(rnd: () => number, uzunMetin: boolean, mobil: boolean): number {
   if (mobil) {
-    return (rnd() - 0.5) * 28;
+    return (rnd() - 0.5) * 16;
   }
   const tip = rnd();
   if (tip < 0.5) return (rnd() - 0.5) * 40;
@@ -239,11 +282,14 @@ function kelimeleriYerlestir(
   const liste = frekanslar.slice(0, maxKelimeSayisi(W));
   const yerlesen: Yerlesim[] = [];
   const kutular: Kutu[] = [];
-  const kenar = mobil ? 20 : 28;
+  const kenar = mobil ? 14 : 28;
   const merkezX = W / 2;
   const merkezY = H / 2;
-  const SPIRAL_ADIM = mobil ? 160 : 220;
-  const RASTGELE_EK = mobil ? 40 : 60;
+  const maxYaricap = Math.min(W, H) * (mobil ? 0.46 : 0.48);
+  const SPIRAL_ADIM = mobil ? 200 : 220;
+  const RASTGELE_EK = mobil ? 50 : 60;
+  const IZGARA_SUTUN = mobil ? 7 : 0;
+  const IZGARA_SATIR = mobil ? 6 : 0;
 
   for (let idx = 0; idx < liste.length; idx++) {
     const f = liste[idx];
@@ -258,43 +304,55 @@ function kelimeleriYerlestir(
 
     for (let kucult = 0; kucult < 5 && !yerlesti; kucult++) {
       const fs = Math.max(fontAraligi(W).min * 0.8, fontSize - kucult * 3);
-      const rotate = aciSec(rnd, uzunluk > 12, mobil);
-      const aralik = gecerliMerkezAraligi(f.orijinal, fs, rotate, W, H, kenar);
+      const aciAdaylari = mobil
+        ? [0, (rnd() - 0.5) * 14, (rnd() - 0.5) * 10]
+        : [aciSec(rnd, uzunluk > 12, mobil)];
 
-      if (aralik.minX > aralik.maxX || aralik.minY > aralik.maxY) continue;
+      for (const rotate of aciAdaylari) {
+        if (yerlesti) break;
+        const aralik = gecerliMerkezAraligi(f.orijinal, fs, rotate, W, H, kenar);
 
-      const baslangicAcisi = rnd() * Math.PI * 2;
-      const spiralMerkezX =
-        idx === 0 ? merkezX : aralik.minX + rnd() * (aralik.maxX - aralik.minX);
-      const spiralMerkezY =
-        idx === 0 ? merkezY : aralik.minY + rnd() * (aralik.maxY - aralik.minY);
+        if (aralik.minX > aralik.maxX || aralik.minY > aralik.maxY) continue;
 
-      for (const { x, y } of spiralNoktalari(
-        spiralMerkezX,
-        spiralMerkezY,
-        baslangicAcisi,
-        SPIRAL_ADIM
-      )) {
-        const cx = Math.min(aralik.maxX, Math.max(aralik.minX, x));
-        const cy = Math.min(aralik.maxY, Math.max(aralik.minY, y));
-        const sonuc = konumDene(f, fs, rotate, cx, cy, W, H, kenar, kutular, renk);
-        if (sonuc) {
-          yerlesen.push(sonuc);
-          yerlesti = true;
-          break;
+        const baslangicAcisi = rnd() * Math.PI * 2;
+
+        const noktaDene = (cx: number, cy: number): boolean => {
+          if (cx < aralik.minX || cx > aralik.maxX || cy < aralik.minY || cy > aralik.maxY) {
+            return false;
+          }
+          const sonuc = konumDene(f, fs, rotate, cx, cy, W, H, kenar, kutular, renk);
+          if (sonuc) {
+            yerlesen.push(sonuc);
+            yerlesti = true;
+            return true;
+          }
+          return false;
+        };
+
+        for (const { x, y } of spiralNoktalari(
+          merkezX,
+          merkezY,
+          baslangicAcisi,
+          SPIRAL_ADIM,
+          maxYaricap
+        )) {
+          if (noktaDene(x, y)) break;
         }
-      }
 
-      if (yerlesti) break;
+        if (yerlesti) break;
 
-      for (let d = 0; d < RASTGELE_EK; d++) {
-        const cx = aralik.minX + rnd() * (aralik.maxX - aralik.minX);
-        const cy = aralik.minY + rnd() * (aralik.maxY - aralik.minY);
-        const sonuc = konumDene(f, fs, rotate, cx, cy, W, H, kenar, kutular, renk);
-        if (sonuc) {
-          yerlesen.push(sonuc);
-          yerlesti = true;
-          break;
+        if (IZGARA_SUTUN > 0) {
+          for (const { x, y } of izgaraNoktalari(aralik, IZGARA_SUTUN, IZGARA_SATIR, rnd)) {
+            if (noktaDene(x, y)) break;
+          }
+        }
+
+        if (yerlesti) break;
+
+        for (let d = 0; d < RASTGELE_EK; d++) {
+          const cx = aralik.minX + rnd() * (aralik.maxX - aralik.minX);
+          const cy = aralik.minY + rnd() * (aralik.maxY - aralik.minY);
+          if (noktaDene(cx, cy)) break;
         }
       }
     }
