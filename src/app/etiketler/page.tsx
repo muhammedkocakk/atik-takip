@@ -30,7 +30,7 @@ export default async function EtiketlerPage() {
         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
           <p className="font-semibold">Nasıl kullanılır?</p>
           <ol className="mt-2 list-inside list-decimal space-y-1 text-emerald-800">
-            <li>Aşağıdan yazdırın — her QR etiketi ayrı sayfada çıkar</li>
+            <li>Aşağıdan yazdırın — her etiket yatay (A4 landscape), ayrı sayfada</li>
             <li>QR’lı yüzü kutunun üstüne yapıştırın (laminasyon önerilir)</li>
             <li>Yönetim panelinden aşamayı güncelleyin — araç “yolda” görünsün</li>
           </ol>

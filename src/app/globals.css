@@ -48,9 +48,10 @@ body {
 }
 
 @media print {
+  /* Yatay (landscape) A4 — etiket sayfaya sığsın */
   @page {
-    size: A4;
-    margin: 15mm;
+    size: A4 landscape;
+    margin: 12mm;
   }
 
   body {
@@ -68,17 +69,18 @@ body {
     padding: 0;
   }
 
-  /* Her QR etiketi tek sayfa */
+  /* Her QR etiketi tek yatay sayfa */
   .qr-etiket-sayfa {
     break-after: page;
     page-break-after: always;
-    min-height: calc(100vh - 30mm);
-    min-height: calc(100dvh - 30mm);
+    width: 100%;
+    height: calc(100vh - 24mm);
+    height: calc(100dvh - 24mm);
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    padding: 10mm 0;
+    padding: 0;
   }
 
   .qr-etiket-sayfa:last-child {
@@ -90,8 +92,18 @@ body {
     break-inside: avoid;
     page-break-inside: avoid;
     margin: 0;
-    box-shadow: none;
+    box-shadow: none !important;
     width: 100%;
-    max-width: 180mm;
+    max-width: 260mm;
+    border-top-width: 2px !important;
+  }
+
+  .qr-etiket-icerik {
+    width: 100%;
+  }
+
+  .qr-etiket-gorsel {
+    width: 42mm !important;
+    height: 42mm !important;
   }
 }
