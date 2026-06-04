@@ -125,6 +125,53 @@ function cakisiyor(a: Kutu, b: Kutu): boolean {
   return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
 }
 
+function sinirIcinde(kutu: Kutu, W: number, H: number, kenar: number): boolean {
+  return (
+    kutu.left >= kenar &&
+    kutu.top >= kenar &&
+    kutu.right <= W - kenar &&
+    kutu.bottom <= H - kenar
+  );
+}
+
+/** Merkezden dışa spiral — kelimeler tüm alana dengeli yayılır */
+function* spiralNoktalari(
+  merkezX: number,
+  merkezY: number,
+  baslangicAcisi: number,
+  adimSayisi: number
+): Generator<{ x: number; y: number }> {
+  yield { x: merkezX, y: merkezY };
+  for (let i = 1; i < adimSayisi; i++) {
+    const t = i * 0.22;
+    const r = 4 + t * 5.5;
+    const aci = baslangicAcisi + t * 2.35;
+    yield {
+      x: merkezX + r * Math.cos(aci),
+      y: merkezY + r * Math.sin(aci),
+    };
+  }
+}
+
+function gecerliMerkezAraligi(
+  metin: string,
+  fontSize: number,
+  rotate: number,
+  W: number,
+  H: number,
+  kenar: number
+): { minX: number; maxX: number; minY: number; maxY: number } {
+  const kutu = metinKutusu(metin, fontSize, rotate, W / 2, H / 2);
+  const yarimGenislik = (kutu.right - kutu.left) / 2;
+  const yarimYukseklik = (kutu.bottom - kutu.top) / 2;
+  return {
+    minX: kenar + yarimGenislik,
+    maxX: W - kenar - yarimGenislik,
+    minY: kenar + yarimYukseklik,
+    maxY: H - kenar - yarimYukseklik,
+  };
+}
+
 function aciSec(rnd: () => number, uzunMetin: boolean, mobil: boolean): number {
   if (mobil) {
     return (rnd() - 0.5) * 28;
@@ -153,6 +200,34 @@ function fontBoyutuHesapla(
   return Math.max(min * 0.85, Math.round(boyut));
 }
 
+function konumDene(
+  f: { metin: string; sayi: number; orijinal: string },
+  fs: number,
+  rotate: number,
+  x: number,
+  y: number,
+  W: number,
+  H: number,
+  kenar: number,
+  kutular: Kutu[],
+  renk: string
+): Yerlesim | null {
+  const kutu = metinKutusu(f.orijinal, fs, rotate, x, y);
+  if (!sinirIcinde(kutu, W, H, kenar)) return null;
+  if (kutular.some((kb) => cakisiyor(kutu, kb))) return null;
+  kutular.push(kutu);
+  return {
+    metin: f.metin,
+    orijinal: f.orijinal,
+    sayi: f.sayi,
+    fontSize: fs,
+    renk,
+    rotate,
+    x: (x / W) * 100,
+    y: (y / H) * 100,
+  };
+}
+
 function kelimeleriYerlestir(
   frekanslar: { metin: string; sayi: number; orijinal: string }[],
   boyut: Boyut
@@ -164,50 +239,63 @@ function kelimeleriYerlestir(
   const liste = frekanslar.slice(0, maxKelimeSayisi(W));
   const yerlesen: Yerlesim[] = [];
   const kutular: Kutu[] = [];
-  const kenar = mobil ? 24 : 36;
-  const MAX_DENEME = mobil ? 120 : 90;
+  const kenar = mobil ? 20 : 28;
+  const merkezX = W / 2;
+  const merkezY = H / 2;
+  const SPIRAL_ADIM = mobil ? 160 : 220;
+  const RASTGELE_EK = mobil ? 40 : 60;
 
-  for (const f of liste) {
+  for (let idx = 0; idx < liste.length; idx++) {
+    const f = liste[idx];
     const oran = max === min ? 0.7 : (f.sayi - min) / (max - min);
     const uzunluk = f.orijinal.length;
-    const seed = hashSeed(f.metin);
+    const seed = hashSeed(f.metin) ^ (idx * 2654435761);
     const rnd = rastgeleUret(seed);
     const renk = RENKLER[Math.floor(rnd() * RENKLER.length)];
 
     let fontSize = fontBoyutuHesapla(oran, uzunluk, W);
     let yerlesti = false;
 
-    for (let kucult = 0; kucult < 4 && !yerlesti; kucult++) {
+    for (let kucult = 0; kucult < 5 && !yerlesti; kucult++) {
       const fs = Math.max(fontAraligi(W).min * 0.8, fontSize - kucult * 3);
-      for (let d = 0; d < MAX_DENEME; d++) {
-        const rotate = aciSec(rnd, uzunluk > 12, mobil);
-        const x = kenar + rnd() * (W - kenar * 2);
-        const y = kenar + rnd() * (H - kenar * 2);
-        const kutu = metinKutusu(f.orijinal, fs, rotate, x, y);
+      const rotate = aciSec(rnd, uzunluk > 12, mobil);
+      const aralik = gecerliMerkezAraligi(f.orijinal, fs, rotate, W, H, kenar);
 
-        if (
-          kutu.left < 8 ||
-          kutu.top < 8 ||
-          kutu.right > W - 8 ||
-          kutu.bottom > H - 8
-        ) {
-          continue;
+      if (aralik.minX > aralik.maxX || aralik.minY > aralik.maxY) continue;
+
+      const baslangicAcisi = rnd() * Math.PI * 2;
+      const spiralMerkezX =
+        idx === 0 ? merkezX : aralik.minX + rnd() * (aralik.maxX - aralik.minX);
+      const spiralMerkezY =
+        idx === 0 ? merkezY : aralik.minY + rnd() * (aralik.maxY - aralik.minY);
+
+      for (const { x, y } of spiralNoktalari(
+        spiralMerkezX,
+        spiralMerkezY,
+        baslangicAcisi,
+        SPIRAL_ADIM
+      )) {
+        const cx = Math.min(aralik.maxX, Math.max(aralik.minX, x));
+        const cy = Math.min(aralik.maxY, Math.max(aralik.minY, y));
+        const sonuc = konumDene(f, fs, rotate, cx, cy, W, H, kenar, kutular, renk);
+        if (sonuc) {
+          yerlesen.push(sonuc);
+          yerlesti = true;
+          break;
         }
-        if (kutular.some((kb) => cakisiyor(kutu, kb))) continue;
+      }
 
-        kutular.push(kutu);
-        yerlesen.push({
-          metin: f.metin,
-          orijinal: f.orijinal,
-          sayi: f.sayi,
-          fontSize: fs,
-          renk,
-          rotate,
-          x: (x / W) * 100,
-          y: (y / H) * 100,
-        });
-        yerlesti = true;
-        break;
+      if (yerlesti) break;
+
+      for (let d = 0; d < RASTGELE_EK; d++) {
+        const cx = aralik.minX + rnd() * (aralik.maxX - aralik.minX);
+        const cy = aralik.minY + rnd() * (aralik.maxY - aralik.minY);
+        const sonuc = konumDene(f, fs, rotate, cx, cy, W, H, kenar, kutular, renk);
+        if (sonuc) {
+          yerlesen.push(sonuc);
+          yerlesti = true;
+          break;
+        }
       }
     }
   }
@@ -217,10 +305,7 @@ function kelimeleriYerlestir(
 
 export function WordCloud({ kelimeler }: WordCloudProps) {
   const kapsayiciRef = useRef<HTMLDivElement>(null);
-  const [boyut, setBoyut] = useState<Boyut>({
-    genislik: REF_GENISLIK,
-    yukseklik: REF_YUKSEKLIK,
-  });
+  const [boyut, setBoyut] = useState<Boyut | null>(null);
 
   useEffect(() => {
     const el = kapsayiciRef.current;
@@ -228,12 +313,14 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
 
     const guncelle = () => {
       const r = el.getBoundingClientRect();
+      if (r.width < 1) return;
       const genislik = Math.max(280, Math.round(r.width));
       const yukseklik = Math.max(200, Math.round(r.width * (REF_YUKSEKLIK / REF_GENISLIK)));
       setBoyut({ genislik, yukseklik });
     };
 
     guncelle();
+    requestAnimationFrame(guncelle);
     const gozlemci = new ResizeObserver(guncelle);
     gozlemci.observe(el);
     window.addEventListener("resize", guncelle);
@@ -243,10 +330,32 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
     };
   }, []);
 
-  const ogeler = useMemo(
-    () => kelimeleriYerlestir(frekansHesapla(kelimeler), boyut),
-    [kelimeler, boyut]
-  );
+  const ogeler = useMemo(() => {
+    if (!boyut) return [];
+    return kelimeleriYerlestir(frekansHesapla(kelimeler), boyut);
+  }, [kelimeler, boyut]);
+
+  if (kelimeler.length === 0) {
+    return (
+      <p className="py-16 text-center text-slate-500">
+        Henüz cevap yok. İlk siz yazın!
+      </p>
+    );
+  }
+
+  if (ogeler.length === 0 && !boyut) {
+    return (
+      <div
+        ref={kapsayiciRef}
+        className="relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/80"
+        style={{
+          aspectRatio: `${REF_GENISLIK} / ${REF_YUKSEKLIK}`,
+          minHeight: 260,
+        }}
+        aria-hidden
+      />
+    );
+  }
 
   if (ogeler.length === 0) {
     return (
@@ -256,7 +365,7 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
     );
   }
 
-  const buyukEkran = boyut.genislik >= 640;
+  const buyukEkran = (boyut?.genislik ?? 0) >= 640;
 
   return (
     <div
@@ -264,7 +373,7 @@ export function WordCloud({ kelimeler }: WordCloudProps) {
       className="relative w-full overflow-hidden rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50/80"
       style={{
         aspectRatio: `${REF_GENISLIK} / ${REF_YUKSEKLIK}`,
-        minHeight: boyut.genislik < 400 ? 220 : buyukEkran ? 320 : 260,
+        minHeight: (boyut?.genislik ?? 0) < 400 ? 220 : buyukEkran ? 320 : 260,
       }}
     >
       <div className="absolute inset-0">
