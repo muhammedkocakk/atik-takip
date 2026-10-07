@@ -36,3 +36,4 @@ next-env.d.ts
 
 # yerel kelime deposu (Supabase yokken)
 /data/kelimeler.json
+/data/projeler.json

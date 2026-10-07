@@ -4,7 +4,10 @@ import { PROJE_ADI, PROJE_ALT_BASLIK } from "@/lib/branding";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { isAdminAuthenticated } from "@/lib/admin-session";
 
-const PUBLIC_NAV = [{ href: "/dusunceler", label: "Düşünceler" }];
+const PUBLIC_NAV = [
+  { href: "/projeler", label: "Projeler" },
+  { href: "/dusunceler", label: "Düşünceler" },
+];
 
 const ADMIN_NAV = [
   { href: "/etiketler", label: "QR Etiketler" },

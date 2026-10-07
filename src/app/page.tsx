@@ -58,6 +58,19 @@ export default function HomePage() {
       </section>
 
       <Link
+        href="/projeler"
+        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+      >
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl">
+          💡
+        </span>
+        <div>
+          <p className="font-bold text-slate-900">Öğrenci projeleri</p>
+          <p className="text-sm text-slate-500">Fikrini paylaş ya da bir projeye katıl</p>
+        </div>
+      </Link>
+
+      <Link
         href="/dusunceler"
         className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-violet-300 hover:shadow-md"
       >
